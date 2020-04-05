@@ -5,6 +5,7 @@ Add this bot to a Telegram group, or speak to it directly,
 to add and see fixtures and results.
 '''
 
+import argparse
 import logging
 import os
 import sys
@@ -56,7 +57,7 @@ def contact(update, context):
     DATA.add_admin(update.effective_message.contact)
 
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text=f'Okay, got it, {update.effective_message.contact.first_name}, thanks.')
+                             text=f'Okay, thanks {update.effective_message.contact.first_name}.')
 
 def captain(update, context):
     '''
@@ -72,7 +73,8 @@ def captain(update, context):
 
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='Please add your contact details to register as a captain.',
-                             reply_markup=telegram.ReplyKeyboardMarkup([[contact_key]], one_time_keyboard=True))
+                             reply_markup=telegram.ReplyKeyboardMarkup([[contact_key]]),
+                             one_time_keyboard=True)
 
 def win(update, context):
     '''
@@ -197,6 +199,9 @@ def main():
     '''
     Kick off the bot.
     '''
+
+    parser = argparse.ArgumentParser(description='Bath Touch Leagues Telegram bot')
+    args = parser.parse_args()
 
     try:
         updater = Updater(token=os.environ['TELEGRAM_AUTH_TOKEN'],
