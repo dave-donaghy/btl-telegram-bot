@@ -20,11 +20,6 @@ import telegram
 
 import btl.database
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
-
-LOGGER = logging.getLogger(__name__)
-
 def error_handler(_update, context):
     '''
     Just log errors.
@@ -193,15 +188,26 @@ def venue(update, context):
     context.bot.send_venue(chat_id=update.effective_chat.id,
                            venue=venue_data)
 
+parser = argparse.ArgumentParser(description='Bath Touch Leagues Telegram bot')
+parser.add_argument('--log', help='log file location (defaults to stdout)')
+args = parser.parse_args()
+
+if args.log:
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        filename=args.log,
+                        level=logging.INFO)
+else:
+    logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                        level=logging.INFO)
+
+LOGGER = logging.getLogger(__name__)
+
 DATA = btl.database.Database()
 
 def main():
     '''
     Kick off the bot.
     '''
-
-    parser = argparse.ArgumentParser(description='Bath Touch Leagues Telegram bot')
-    args = parser.parse_args()
 
     try:
         updater = Updater(token=os.environ['TELEGRAM_AUTH_TOKEN'],
