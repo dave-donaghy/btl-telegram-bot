@@ -12,6 +12,9 @@ import sys
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
 from telegram.ext import CallbackQueryHandler
+from telegram.ext import MessageHandler
+from telegram.ext.filters import Filters
+
 import telegram
 
 import btl.database
@@ -39,6 +42,35 @@ def callback_query(update, context):
 
     context.bot.answer_callback_query(update.callback_query.id,
                                       text=f'Registered {update.callback_query.data} win.')
+
+def contact(update, context):
+    '''
+    Record a contact message to identify users.
+    '''
+
+    LOGGER.info(update.effective_message.contact)
+
+    context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                 action=telegram.ChatAction.TYPING)
+
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text='Okay, got it, thanks.')
+
+def captain(update, context):
+    '''
+    Register a captain.
+    '''
+
+    LOGGER.info(update.effective_message.text)
+
+    context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                 action=telegram.ChatAction.TYPING)
+
+    contact_key = telegram.KeyboardButton(text='Send contact', request_contact=True)
+
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text='Please add your contact details to register as a captain.',
+                             reply_markup=telegram.ReplyKeyboardMarkup([[contact_key]]))
 
 def win(update, context):
     '''
@@ -75,6 +107,22 @@ def games(update, context):
 
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text=DATA.get_games())
+
+def ref(update, context):
+    '''
+    Register a referee.
+    '''
+
+    LOGGER.info(update.effective_message.text)
+
+    context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                 action=telegram.ChatAction.TYPING)
+
+    contact_key = telegram.KeyboardButton(text='Send contact', request_contact=True)
+
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text='Please add your contact details to register as a referee.',
+                             reply_markup=telegram.ReplyKeyboardMarkup([[contact_key]]))
 
 def start(update, context):
     '''
@@ -148,7 +196,11 @@ def main():
         LOGGER.error(error)
         sys.exit(1)
 
+    updater.dispatcher.add_handler(MessageHandler(Filters.contact, contact))
+
+    updater.dispatcher.add_handler(CommandHandler('captain', captain))
     updater.dispatcher.add_handler(CommandHandler('games', games))
+    updater.dispatcher.add_handler(CommandHandler('ref', ref))
     updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('table', table))
     updater.dispatcher.add_handler(CommandHandler('times', times))
