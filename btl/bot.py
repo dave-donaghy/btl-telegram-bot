@@ -88,7 +88,8 @@ def win(update, context):
 
     if not DATA.is_admin(update.effective_user.id):
         context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text='Only captains and refs can record wins.')
+                                 text='Sorry, only captains and refs can record wins.',
+                                 reply_to_message_id=update.effective_message.message_id)
 
         return
 
