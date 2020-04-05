@@ -30,6 +30,7 @@ class Database():
         '''
 
         self.__logger = logging.getLogger(__name__)
+        self.__admins = []
 
     def add_admin(self, contact):
         '''
@@ -37,6 +38,19 @@ class Database():
         '''
 
         self.__logger.info(f'add_admin({contact}')
+
+        self.__admins.append(contact)
+
+    def is_admin(self, user_id):
+        '''
+        Check that a given user is an admin
+        '''
+
+        for admin in self.__admins:
+            if user_id == admin.user_id:
+                return True
+
+        return False
 
     def get_teams(self):
         '''

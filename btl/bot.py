@@ -72,7 +72,7 @@ def captain(update, context):
 
     context.bot.send_message(chat_id=update.effective_chat.id,
                              text='Please add your contact details to register as a captain.',
-                             reply_markup=telegram.ReplyKeyboardMarkup([[contact_key]]))
+                             reply_markup=telegram.ReplyKeyboardMarkup([[contact_key]], one_time_keyboard=True))
 
 def win(update, context):
     '''
@@ -85,6 +85,12 @@ def win(update, context):
 
     context.bot.send_chat_action(chat_id=update.effective_chat.id,
                                  action=telegram.ChatAction.TYPING)
+
+    if not DATA.is_admin(update.effective_user.id):
+        context.bot.send_message(chat_id=update.effective_chat.id,
+                                 text='Only captains and refs can record wins.')
+
+        return
 
     teams = DATA.get_teams()
 
