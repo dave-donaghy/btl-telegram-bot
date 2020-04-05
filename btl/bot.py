@@ -53,8 +53,10 @@ def contact(update, context):
     context.bot.send_chat_action(chat_id=update.effective_chat.id,
                                  action=telegram.ChatAction.TYPING)
 
+    DATA.add_admin(update.effective_message.contact)
+
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='Okay, got it, thanks.')
+                             text=f'Okay, got it, {update.effective_message.contact.first_name}, thanks.')
 
 def captain(update, context):
     '''

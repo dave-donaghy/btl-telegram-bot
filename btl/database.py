@@ -31,6 +31,13 @@ class Database():
 
         self.__logger = logging.getLogger(__name__)
 
+    def add_admin(self, contact):
+        '''
+        Add a user as an admin.
+        '''
+
+        self.__logger.info(f'add_admin({contact}')
+
     def get_teams(self):
         '''
         Get all teams registered in current league.
