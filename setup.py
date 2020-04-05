@@ -3,11 +3,11 @@
 from setuptools import setup
 
 setup(
-    name='telegram-bot',
+    name='btl-telegram-bot',
     install_requires = [ 'python-telegram-bot' ],
     entry_points={
         'console_scripts': [
-            'telegram-bot = btl.bot:main',
+            'btl-telegram-bot = btl.bot:main',
         ],
     }
 )

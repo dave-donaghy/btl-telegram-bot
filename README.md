@@ -1,5 +1,5 @@
-# telegram-bot
-Telegram bot
+# btl-telegram-bot
+Bath Touch Leaguse Telegram bot
 
 This is simple to install to play with using this:
     python3 setup.py develop
