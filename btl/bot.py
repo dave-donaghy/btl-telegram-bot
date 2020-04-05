@@ -11,61 +11,34 @@ import sys
 
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
-from telegram.ext import InlineQueryHandler
 from telegram.ext import CallbackQueryHandler
 import telegram
 
-LOCATION_WINTER = [51.407912, -2.379035]
+import btl.database
 
-logging.basicConfig(
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        level=logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 
 LOGGER = logging.getLogger(__name__)
 
-def error_handler(update, context):
+def error_handler(_update, context):
     '''
     Just log errors.
     '''
 
     LOGGER.error(f'{type(context.error)}: {context.error}')
 
-def inline_query(update, context):
-    '''
-    Log each inline query
-    '''
-
-    LOGGER.info(f'{update.effective_user.username}: {update.inline_query.query}')
-
-    results = list()
-    result = telegram.InlineQueryResultContact(id='Organizer',
-                                               cache_time=5,
-                                               phone_number='07111222333',
-                                               first_name='Dummy',
-                                               last_name='Response')
-    results.append(result)
-
-    context.bot.answer_inline_query(update.inline_query.id, results=results)
-
 def callback_query(update, context):
     '''
     Log each callback query
     '''
 
-    LOGGER.info(f'Callback from {update.effective_user.username}: {update.callback_query.data}')
+    LOGGER.info(f'win: {update.effective_user.username}: {update.callback_query.data}')
+
+    DATA.set_win(update.callback_query.data)
 
     context.bot.answer_callback_query(update.callback_query.id,
                                       text=f'Registered {update.callback_query.data} win.')
-
-def start(update, context):
-    '''
-    Just recognize a user.
-    '''
-
-    LOGGER.info(__name__)
-
-    context.bot.send_message(chat_id=update.effective_chat.id,
-                             text='Okay, starting.')
 
 def win(update, context):
     '''
@@ -74,9 +47,13 @@ def win(update, context):
     No details are provided beyond the win; in particular, we do not record scores.
     '''
 
-    LOGGER.info('win')
+    LOGGER.info(update.effective_message.text)
 
-    teams = ['Striders', 'Hornets', 'Rebels', 'Mougars']
+    context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                 action=telegram.ChatAction.TYPING)
+
+    teams = DATA.get_teams()
+
     team_buttons = [[telegram.InlineKeyboardButton(text=team,
                                                    callback_data=team) for team in teams]]
 
@@ -91,34 +68,52 @@ def games(update, context):
     Send list of next games.
     '''
 
-    LOGGER.info(__name__)
+    LOGGER.info(update.effective_message.text)
 
-    games_data = '''
-Striders - Hornets, Tuesday 7 April, 18:30
-Rebels - Mougars, Tuesday 7 April, 19:15
-Space Invaders - Hawks, Tuesday 7 April, 19:15
-'''
+    context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                 action=telegram.ChatAction.TYPING)
 
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text=games_data)
+                             text=DATA.get_games())
+
+def start(update, context):
+    '''
+    Send start message.
+    '''
+
+    LOGGER.info(update.effective_message.text)
+
+    context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                 action=telegram.ChatAction.TYPING)
+
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text=DATA.get_start_message())
+
+def times(update, context):
+    '''
+    Send general times.
+    '''
+
+    LOGGER.info(update.effective_message.text)
+
+    context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                 action=telegram.ChatAction.TYPING)
+
+    context.bot.send_message(chat_id=update.effective_chat.id,
+                             text=DATA.get_times())
 
 def table(update, context):
     '''
     Send the league table.
     '''
 
-    LOGGER.info(__name__)
+    LOGGER.info(update.effective_message.text)
 
-    table_data = '''
-`Team      | W  D  L |  P `
-`-------------------------`
-`Striders  | 6  0  0 |  24`
-`Hornets   | 5  0  1 |  21`
-`Rebels    | 4  0  2 |  18`
-'''
+    context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                 action=telegram.ChatAction.TYPING)
 
     context.bot.send_message(chat_id=update.effective_chat.id,
-                             text=table_data,
+                             text=DATA.get_table(),
                              parse_mode=telegram.ParseMode.MARKDOWN_V2)
 
 def venue(update, context):
@@ -126,16 +121,20 @@ def venue(update, context):
     Send league venue details.
     '''
 
-    LOGGER.info(__name__)
+    LOGGER.info(update.effective_message.text)
 
-    location = telegram.Location(LOCATION_WINTER[1], LOCATION_WINTER[0])
+    context.bot.send_chat_action(chat_id=update.effective_chat.id,
+                                 action=telegram.ChatAction.TYPING)
 
-    venue_data = telegram.Venue(location=location,
-                                title='Kingswood Upper Sports Field and Pavilion',
-                                address='Top of Lansdown, opp Beckford\'s Tower')
+    location_gps, title, address = DATA.get_venue()
+    location = telegram.Location(location_gps[0], location_gps[1])
+
+    venue_data = telegram.Venue(location=location, title=title, address=address)
 
     context.bot.send_venue(chat_id=update.effective_chat.id,
                            venue=venue_data)
+
+DATA = btl.database.Database()
 
 def main():
     '''
@@ -149,14 +148,15 @@ def main():
         LOGGER.error(error)
         sys.exit(1)
 
-    updater.dispatcher.add_handler(CommandHandler('start', start))
-    updater.dispatcher.add_handler(CommandHandler('win', win))
     updater.dispatcher.add_handler(CommandHandler('games', games))
+    updater.dispatcher.add_handler(CommandHandler('start', start))
     updater.dispatcher.add_handler(CommandHandler('table', table))
+    updater.dispatcher.add_handler(CommandHandler('times', times))
     updater.dispatcher.add_handler(CommandHandler('venue', venue))
+    updater.dispatcher.add_handler(CommandHandler('win', win))
+
     updater.dispatcher.add_error_handler(error_handler)
 
-    updater.dispatcher.add_handler(InlineQueryHandler(inline_query))
     updater.dispatcher.add_handler(CallbackQueryHandler(callback_query))
 
     updater.start_polling()
